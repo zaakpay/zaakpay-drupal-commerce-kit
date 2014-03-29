@@ -33,9 +33,7 @@ When you Extract the zip file, it has five files
 These are simple PHP files with different extensions 
 
 * commerce_zaakpay.info - This is simple file which has information about the payment module.
-* commerce_zaakpay.module - This is the core file which includes all the funcionalities for the 
-						module like posting cart information to Zaakpay with checksum and 
-						getting the response etc ..,  
+* commerce_zaakpay.module - This is the core file which includes all the funcionalities for the module like posting cart information to Zaakpay with checksum and getting the response etc ..,  
 * posttozaakpay.php - This is the php file which is responsible for posting the form to the Zaakpay API.
 * response.php - This is the php file used to receive the response from Zaakpay API.			
 * checksum.php - Cotains general functions to find checksum.
