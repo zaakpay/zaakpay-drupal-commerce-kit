@@ -1,0 +1,403 @@
+<?php
+/**
+ * @file
+ * Administration forms form payment method
+ */
+function zaakpay_settings_form($settings = NULL) {
+  $form = array();
+  $settings = (array) $settings + array(
+    'merchantIdentifier' => '',
+    'secret_key' => '',
+	'merchantIpAddress' => '',
+	'mode' => '',
+  );
+  $form['merchantIdentifier'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Merchant id'),
+    '#default_value' => $settings['merchantIdentifier'],
+  );
+  $form['secret_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Zaakpay Secret key'),
+    '#default_value' => $settings['secret_key'],
+  );
+  $form['merchantIpAddress'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Merchant\'s IP Address'),
+    '#default_value' => $settings['merchantIpAddress'],
+  );
+  $form['mode'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Mode of transaction ( 0 = Trial , 1 = Live )'),
+    '#default_value' => $settings['mode'],
+  );
+  return $form;
+}
+// register payment method
+function commerce_zaakpay_commerce_payment_method_info() {
+  $payment_methods = array();
+  $payment_methods['zaakpay'] = array(
+    'title' => t("Zaakpay"),
+    'display_title' => "Zaakpay",
+    'short_title' => 'Zaakpay',
+    'description' => t("Payment method for Zaakpay"),
+    'terminal' => FALSE,
+    'offsite' => TRUE,
+    'offsite_autoredirect' => TRUE,
+  );
+  return $payment_methods;
+}
+
+
+// Ask for zaakpay redirect form
+function zaakpay_redirect_form($form, &$form_state, $order, $payment_method) {
+  $wrapper = entity_metadata_wrapper('commerce_order', $order);
+  // Get financial info
+  if($wrapper->commerce_customer_billing->commerce_customer_address->value()){
+$order_address = $wrapper->commerce_customer_billing->commerce_customer_address->value();
+}
+
+$wrapper1 = entity_metadata_wrapper('field_data_field_phone_number', $order);
+if($wrapper->commerce_customer_billing-> field_phone_number -> value())
+{
+$order_address=$wrapper->commerce_customer_billing->commerce_customer_address->value();
+}
+
+  $currency_code = $wrapper->commerce_order_total->currency_code->value();
+  $amount = (int) ($wrapper->commerce_order_total->amount->value());
+  $returnUrl = url('checkout/' . $order->order_id . '/payment/return/' . $order->data['payment_redirect_key'], array('absolute' => TRUE));
+  $merchantIdentifier = $payment_method['settings']['merchantIdentifier'];
+  $secret_key = $payment_method['settings']['secret_key'];
+  $merchantIpAddress = $payment_method['settings']['merchantIpAddress'];
+  $mode = $payment_method['settings']['mode'];
+  $orderId = $order->order_id;
+  $buyerEmail = $wrapper->mail->value();
+  $txnDate=date('Y-m-d');
+  $buyerFirstName =$order_address['first_name'];
+  $buyerLastName =$order_address['last_name'];
+  $buyerAddress = $order_address['thoroughfare'];
+  $buyerCity = $order_address['locality'];
+  $buyerState = $order_address['administrative_area'];
+  $buyerCountry = $order_address['country'];
+  $buyerPincode = $order_address['postal_code'];
+  $buyerPhoneNumber = $wrapper->commerce_customer_billing->field_phone_number -> value() ; //add a new field named "phone number" name its machine name as "field_phone_number" at checkout page. 
+  $txnType = '1';
+  $zpPayOption = '1';
+  $currency = 'INR';
+	$purpose = '1';
+	$productDescription = 'Zaakpay Subscription fee';
+	//$product1Description =  '';
+	//$product2Description = '';
+	//$product3Description = '';
+	//$product4Description = '';
+	//$ShipToAddress = "";
+	//$ShipToCity = "";
+	//$ShipToState = "";
+	//$ShipToCountry = "";
+	//$ShipToPincode = "";
+	//$ShipToPhoneNumber = "";
+	//$ShipToFirstname = "";
+	//$ShipToLastname = "";
+	$form['merchantIdentifier'] = array(
+    '#type' => 'hidden',
+    '#value' => $merchantIdentifier,
+    );
+	$form['orderId'] = array(
+    '#type' => 'hidden',
+    '#value' => $orderId,
+    );
+  
+    $form['returnUrl'] = array(
+    '#type' => 'hidden',
+    '#value' => $returnUrl ,
+    );
+	
+  $form['buyerEmail'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerEmail,
+    );
+  $form['buyerFirstName'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerFirstName,
+    );
+	$form['buyerLastName'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerLastName,
+    );
+	$form['buyerAddress'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerAddress,
+    );
+	$form['buyerCity'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerCity,
+    );
+	$form['buyerState'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerState,
+    );
+	$form['buyerCountry'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerCountry,
+    )
+	;$form['buyerPincode'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerPincode,
+    );
+	$form['buyerPhoneNumber'] = array(
+    '#type' => 'hidden',
+    '#value' => $buyerPhoneNumber,
+    );
+	$form['txnType'] = array(
+    '#type' => 'hidden',
+    '#value' => $txnType,
+    );
+	$form['zpPayOption'] = array(
+    '#type' => 'hidden',
+    '#value' => $zpPayOption,
+    );
+	$form['mode'] = array(
+    '#type' => 'hidden',
+    '#value' => $mode,
+    );
+	$form['currency'] = array(
+    '#type' => 'hidden',
+    '#value' => $currency,
+    );
+	$form['amount'] = array(
+    '#type' => 'hidden',
+    '#value' => $amount,
+    );
+	$form['merchantIpAddress'] = array(
+    '#type' => 'hidden',
+    '#value' => $merchantIpAddress,
+    );
+	$form['purpose'] = array(
+    '#type' => 'hidden',
+    '#value' => $purpose,
+    );
+	$form['productDescription'] = array(
+    '#type' => 'hidden',
+    '#value' => $productDescription,
+    );
+	/*$form['product1Description'] = array(
+    '#type' => 'hidden',
+    '#value' => $product1Description,
+    );
+	$form['product2Description'] = array(
+    '#type' => 'hidden',
+    '#value' => $product2Description,
+    );
+	$form['product3Description'] = array(
+    '#type' => 'hidden',
+    '#value' => $product3Description,
+    );
+	$form['product4Description'] = array(
+    '#type' => 'hidden',
+    '#value' => $product4Description,
+    );
+	$form['ShipToAddress'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToAddress,
+    );
+	$form['ShipToCity'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToCity,
+    );
+	$form['ShipToState'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToState,
+    );
+	$form['ShipToCountry'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToCountry,
+    );
+	$form['ShipToPincode'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToPincode,
+    );
+	$form['ShipToPhoneNumber'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToPhoneNumber,
+    );
+	$form['ShipToFirstname'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToFirstname,
+    );
+	$form['ShipToLastname'] = array(
+    '#type' => 'hidden',
+    '#value' => $ShipToLastname,
+    );
+	*/
+
+	$form['txnDate'] = array(
+    '#type' => 'hidden',
+    '#value' => $txnDate,
+    );
+	
+	 $form['submit'] = array(
+	    '#type' => 'submit',
+	    '#value' => t('Save'),
+  );
+	$form['#action']=url('modules/commerce_zaakpay/posttozaakpay.php');
+  return $form;
+}
+
+
+
+/**
+ * Implements hook_redirect_form_validate().
+ */
+
+// validate payment
+function zaakpay_redirect_form_validate($order, $payment_method) {
+  $orderId =  $_REQUEST['orderId'];
+  $responseCode = $_REQUEST['responseCode'];
+	$responseDescription = $_REQUEST['responseDescription'];
+	$recd_checksum = $_REQUEST['checksum'];
+$secret_key = $payment_method['settings']['secret_key'];
+	$all = getAllParams();
+			error_log("AllParams : ".$all);
+		error_log("Secret Key : ".$secret_key);
+	$bool = false;
+	$bool = verifyChecksum($recd_checksum, $all, $secret_key);
+  $message = t('Security error ip Address was: @ip', array('@ip' => ip_address()));
+  if ( $bool == true && $responseCode == "100" ) {
+    return drupal_set_message(t('Thank you for shopping with us. Your account has been charged and your transaction is successful.'));
+    commerce_zaakpay_transaction($order, $payment_method);
+  } 
+  elseif ( $bool == true && $responseCode != "100" ) {
+    return drupal_set_message(('Thank you for shopping with us.However,the transaction has been declined.'));
+    commerce_zaakpay_transaction($order, $payment_method);
+  } 
+ 
+  else {
+    return drupal_set_message(t('Security Error. Illegal access detected. We will store your IP address.'), ERROR );
+    watchdog('commerce_zaakpay', $message, NULL, WATCHDOG_ERROR);
+  }
+}
+
+function commerce_zaakpay_transaction($order, $payment_method) {
+// ask results from verify function
+  if(_commerce_zaakpay_verify($payment_method) == 'false') {
+    return;
+  };
+  $wrapper = entity_metadata_wrapper('commerce_order', $order);
+  $currency = $wrapper->commerce_order_total->currency_code->value();
+  $amount = $wrapper->commerce_order_total->amount->value();
+  $transaction->instance_id = $payment_method['instance_id'];
+  $transaction->amount = $amount;
+  $transaction->currency_code = $currency;
+  $transaction->remote_status = t('Success');
+  $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+  $transaction->message = t('Payment received at') . ' ' . date("d-m-Y H:i:s", REQUEST_TIME);
+  commerce_payment_transaction_save($transaction);
+}
+
+
+// helper functions.. 
+function _commerce_zaakpay_verify($payment_method) {
+  $secret_key = $payment_method['settings']['secret_key'];
+  $responseCode = $_REQUEST['responseCode'];
+  $responseDescription = $_REQUEST['responseDescription'];
+  $orderId =  $_REQUEST['orderId'];
+  $checksum = $_REQUEST['checksum'];
+  $all = getAllParams();
+  return verifyChecksum($checksum, $all, $secret_key);
+}
+
+function sanitizedParam($param) {
+		$pattern[0] = "%,%";
+	        $pattern[1] = "%#%";
+	        $pattern[2] = "%\(%";
+       		$pattern[3] = "%\)%";
+	        $pattern[4] = "%\{%";
+	        $pattern[5] = "%\}%";
+	        $pattern[6] = "%<%";
+	        $pattern[7] = "%>%";
+	        $pattern[8] = "%`%";
+	        $pattern[9] = "%!%";
+	        $pattern[10] = "%\\$%";
+	        $pattern[11] = "%\%%";
+	        $pattern[12] = "%\^%";
+	        $pattern[13] = "%=%";
+	        $pattern[14] = "%\+%";
+	        $pattern[15] = "%\|%";
+	        $pattern[16] = "%\\\%";
+	        $pattern[17] = "%:%";
+	        $pattern[18] = "%'%";
+	        $pattern[19] = "%\"%";
+	        $pattern[20] = "%;%";
+	        $pattern[21] = "%~%";
+	        $pattern[22] = "%\[%";
+	        $pattern[23] = "%\]%";
+	        $pattern[24] = "%\*%";
+	        $pattern[25] = "%&%";
+        	$sanitizedParam = preg_replace($pattern, "", $param);
+		return $sanitizedParam;
+	}
+
+	function sanitizedURL($param) {
+		$pattern[0] = "%,%";
+	        $pattern[1] = "%\(%";
+       		$pattern[2] = "%\)%";
+	        $pattern[3] = "%\{%";
+	        $pattern[4] = "%\}%";
+	        $pattern[5] = "%<%";
+	        $pattern[6] = "%>%";
+	        $pattern[7] = "%`%";
+	        $pattern[8] = "%!%";
+	        $pattern[9] = "%\\$%";
+	        $pattern[10] = "%\%%";
+	        $pattern[11] = "%\^%";
+	        $pattern[12] = "%\+%";
+	        $pattern[13] = "%\|%";
+	        $pattern[14] = "%\\\%";
+	        $pattern[15] = "%'%";
+	        $pattern[16] = "%\"%";
+	        $pattern[17] = "%;%";
+	        $pattern[18] = "%~%";
+	        $pattern[19] = "%\[%";
+	        $pattern[20] = "%\]%";
+	        $pattern[21] = "%\*%";
+        	$sanitizedParam = preg_replace($pattern, "", $param);
+		return $sanitizedParam;
+	}
+
+function calculateChecksum($secret_key, $all) {
+		$hash = hash_hmac('sha256', $all , $secret_key);
+		$checksum = $hash;
+		return $checksum;
+	}
+
+	function getAllParams() {
+		//ksort($_POST);
+		$all = '';
+		foreach($_POST as $key => $value)	{
+			if($key != 'checksum') {
+				$all .= "'";
+				if ($key == 'returnUrl') {
+					$all .= sanitizedURL($value);
+				} else {
+					$all .= sanitizedParam($value);
+				}
+				$all .= "'";
+			}
+		}
+		return $all;
+	}
+	
+		function verifyChecksum($checksum, $all, $secret) {
+		$cal_checksum = calculateChecksum($secret, $all);
+		$bool = false;
+		if($checksum == $cal_checksum)	{
+			$bool = true;
+		}
+		
+		return $bool;
+	}
+
+	
+	
+	
+?>
